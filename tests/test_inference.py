@@ -2,16 +2,16 @@ import unittest
 
 import torch
 import torchaudio
-from ced_model.feature_extraction_ced import CedFeatureExtractor
-from ced_model.modeling_ced import CedForAudioClassification
+from dasheng_model.feature_extraction_dasheng import DashengFeatureExtractor
+from dasheng_model.modeling_dasheng import DashengModel
 
 
 class TestInference(unittest.TestCase):
 
-    def test_ced_for_audio_classification(self):
-        model_id = "mispeech/ced-tiny"
-        feature_extractor = CedFeatureExtractor.from_pretrained(model_id)
-        model = CedForAudioClassification.from_pretrained(model_id)
+    def test_dasheng_for_audio_classification(self):
+        model_id = "mispeech/dasheng-base"
+        feature_extractor = DashengFeatureExtractor.from_pretrained(model_id)
+        model = DashengModel.from_pretrained(model_id)
 
         audio, sampling_rate = torchaudio.load("resources/JeD5V5aaaoI_931_932.wav")
 
@@ -19,9 +19,7 @@ class TestInference(unittest.TestCase):
         with torch.no_grad():
             logits = model(**inputs).logits
 
-        predicted_class_ids = torch.argmax(logits, dim=-1).item()
-        predicted_class = model.config.id2label[predicted_class_ids]
-        assert predicted_class == "Finger snapping"
+        assert logits.shape == (1, 768)
 
 
 if __name__ == "__main__":

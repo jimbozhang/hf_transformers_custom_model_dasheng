@@ -3,7 +3,7 @@ name = 'hf_transformers_custom_model_dasheng'
 version = '0.0.1'
 
 dependencies = [
-    'einops',
+    "einops",
     'torch==2.1.1',
     'torchaudio==2.1.1',
     'transformers==4.35.2'

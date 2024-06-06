@@ -17,14 +17,12 @@
 import collections
 import math
 from functools import partial
-from typing import Any, Callable, Optional, Tuple, Union
+from typing import Any, Optional, Tuple
 
 import torch
 import torch.utils.checkpoint
-from einops import rearrange
 from einops.layers.torch import Rearrange
 from torch import nn
-from torch.cuda.amp import autocast
 from transformers.modeling_outputs import SequenceClassifierOutput
 from transformers.modeling_utils import PreTrainedModel
 from transformers.utils import (
@@ -39,7 +37,6 @@ from .configuration_dasheng import DashengConfig
 logger = logging.get_logger(__name__)
 
 _CONFIG_FOR_DOC = "DashengConfig"
-_SEQ_CLASS_EXPECTED_LOSS = 0.69
 
 # Audio classification docstring
 _SEQ_CLASS_CHECKPOINT = "mispeech/dasheng-base"
@@ -53,7 +50,7 @@ DASHENG_PRETRAINED_MODEL_ARCHIVE_LIST = [
 ]
 
 
-# Taken from timm
+# The functions `trunc_normal_`, `_no_grad_trunc_normal_`, `drop_path` and the module `DropPath`` are taken from timm
 def trunc_normal_(tensor, mean=0.0, std=1.0, a=-2.0, b=2.0):
     return _no_grad_trunc_normal_(tensor, mean, std, a, b)
 
@@ -161,7 +158,7 @@ class AudioPatchEmbed(nn.Module):
     def forward(self, x):
         x = self.proj(x)
         if self.flatten:
-            x = rearrange(x, "b c f t -> b (f t) c")
+            x = torch.permute(torch.flatten(x, 2, 3), (0, 2, 1))  # rearrange(x, "b c f t -> b (f t) c")
         x = self.norm(x)
         return x
 
@@ -294,17 +291,14 @@ class AudioTransformerMAE_Encoder(nn.Module):
         self.eval_avg = eval_avg
         self.time_patch_out = time_patch_out
         self.freq_patch_out = freq_patch_out
+        self.pad_last = kwargs.get("pad_last", False)
 
         if init_bn:
             self.init_bn = nn.Sequential(
                 Rearrange("b c f t -> b f c t"),
-                nn.BatchNorm2d(self.n_mels, momentum=0.01),
+                torch.nn.BatchNorm2d(self.n_mels, momentum=0.01),
                 Rearrange("b f c t -> b c f t"),
             )
-        else:
-            # self.init_bn = Normer(-10, 20)
-            # self.init_bn = GlobalNormer()
-            self.init_bn = None
 
         self.target_length = target_length
         self.patch_embed = AudioPatchEmbed(
@@ -349,96 +343,19 @@ class AudioTransformerMAE_Encoder(nn.Module):
             ]
         )
         self.norm = norm_layer(embed_dim)
-        self.apply(self.init_weights)
         if hasattr(self, "cls_token") and self.cls_token is not None:
             nn.init.normal_(self.cls_token, std=1e-6)
-        group_masking = kwargs.get("group_masking", False)
-        if isinstance(group_masking, bool):
-            if group_masking is True:
-                self.masking_func = self.random_masking_group
-            else:
-                self.masking_func = self.random_masking
-        elif isinstance(group_masking, int):
-            self.masking_func = partial(self.random_masking_group, group_factor=group_masking)
 
     @torch.jit.ignore
     def no_weight_decay(self):
         return {"time_pos_embed", "cls_token", "freq_pos_embed", "token_pos_embed"}
 
-    def init_weights(self, module):
-        if isinstance(module, nn.Linear):
-            torch.nn.init.xavier_uniform_(module.weight)
-            if module.bias is not None:
-                nn.init.zeros_(module.bias)
-        elif isinstance(module, nn.LayerNorm):
-            nn.init.constant_(module.bias, 0)
-            nn.init.constant_(module.weight, 1.0)
-
-    def random_masking_group(self, x, mask_ratio, group_factor: int = 2):
-        """
-        Perform per-sample random masking by per-sample shuffling.
-        Per-sample shuffling is done by argsort random noise.
-        x: [N, L, D], sequence
-        """
-        N, L, D = x.shape  # batch, length, dim
-        len_keep = int(L * (1 - mask_ratio))
-
-        noise = torch.rand(N, L // group_factor, device=x.device)  # noise in [0, 1]
-        # indices = torch.arange(L).view(1, 5, 4).repeat(N, 1, 1)
-        indices = torch.arange(L, device=x.device).view(-1, group_factor)
-
-        # sort noise for each sample
-        ids_shuffle = torch.argsort(noise, dim=1)  # ascend: small is keep, large is remove
-        ids_shuffle = indices[ids_shuffle].flatten(-2)
-        ids_restore = torch.argsort(ids_shuffle, dim=1)
-
-        # keep the first subset
-        ids_keep = ids_shuffle[:, :len_keep]
-        x_masked = torch.gather(x, dim=1, index=ids_keep.unsqueeze(-1).repeat(1, 1, D))
-
-        # generate the binary mask: 0 is keep, 1 is remove
-        mask = torch.ones([N, L], device=x.device)
-        mask[:, :len_keep] = 0
-        # unshuffle to get the binary mask
-        mask = torch.gather(mask, dim=1, index=ids_restore)
-
-        return x_masked, mask, ids_restore
-
-    def random_masking(self, x, mask_ratio):
-        """
-        Perform per-sample random masking by per-sample shuffling.
-        Per-sample shuffling is done by argsort random noise.
-        x: [N, L, D], sequence
-        """
-        N, L, D = x.shape  # batch, length, dim
-        len_keep = int(L * (1 - mask_ratio))
-
-        noise = torch.rand(N, L, device=x.device)  # noise in [0, 1]
-
-        # sort noise for each sample
-        ids_shuffle = torch.argsort(noise, dim=1)  # ascend: small is keep, large is remove
-        ids_restore = torch.argsort(ids_shuffle, dim=1)
-
-        # keep the first subset
-        ids_keep = ids_shuffle[:, :len_keep]
-        x_masked = torch.gather(x, dim=1, index=ids_keep.unsqueeze(-1).repeat(1, 1, D))
-
-        # generate the binary mask: 0 is keep, 1 is remove
-        mask = torch.ones([N, L], device=x.device)
-        mask[:, :len_keep] = 0
-        # unshuffle to get the binary mask
-        mask = torch.gather(mask, dim=1, index=ids_restore)
-
-        return x_masked, mask, ids_restore
-
-    def forward_features(self, x, mask_ratio):
+    def forward_features(self, x):
         x = self.patch_embed(x)
         b, c, f, t = x.shape
         x = x + self.time_pos_embed[:, :, :, :t]
         x = x + self.freq_pos_embed[:, :, :, :]  # Just for sin pos embed
-        x = rearrange(x, "b c f t -> b (f t) c")
-        # x, mask, ids_restore = self.random_masking(x, mask_ratio)
-        x, mask, ids_restore = self.masking_func(x, mask_ratio)
+        x = torch.permute(torch.flatten(x, 2, 3), (0, 2, 1))  # rearrange(x, "b c f t -> b (f t) c")
         if self.pooling == "token":
             cls_token = self.cls_token.expand(x.shape[0], -1, -1)
             cls_token = cls_token + self.token_pos_embed[:, :]
@@ -446,55 +363,31 @@ class AudioTransformerMAE_Encoder(nn.Module):
         x = self.pos_drop(x)
         x = self.blocks(x)
         x = self.norm(x)
-        return x, mask, ids_restore
+        return x
 
-    def load_state_dict(self, state_dict, strict=True):
-        if "time_pos_embed" in state_dict and self.time_pos_embed.shape != state_dict["time_pos_embed"].shape:
-            logger.debug("Positional Embedding shape not the same with model, resizing!")
-            self.change_pos_embedding(state_dict)
-        super().load_state_dict(state_dict, strict=strict)
+    def forward(self, x):
+        x = self.init_bn(x) if self.init_bn is not None else x
 
-    def change_pos_embedding(self, state_dict):
-        target_time_pos_embed_length = self.time_pos_embed.shape[-1]
-        target_freq_pos_embed_length = self.freq_pos_embed.shape[-2]
+        if x.shape[-1] > self.target_length:
+            splits = x.split(self.target_length, -1)
 
-        pretrained_time_pos_embed = state_dict["time_pos_embed"]
-        pretrained_freq_pos_embed = state_dict["freq_pos_embed"]
-
-        if target_freq_pos_embed_length <= pretrained_time_pos_embed.shape[-1]:
-            state_dict["time_pos_embed"] = pretrained_time_pos_embed[..., :target_time_pos_embed_length]
+            if splits[-1].shape[-1] < self.target_length:
+                if self.pad_last:
+                    pad = torch.zeros(*x.shape[:-1], self.target_length, device=x.device)
+                    pad[..., : splits[-1].shape[-1]] = splits[-1]
+                    splits = torch.stack((*splits[:-1], pad), dim=0)
+                else:
+                    splits = torch.stack(splits[:-1], dim=0)
+            else:
+                splits = torch.stack(splits[:-1], dim=0)
+            n_splits = len(splits)
+            x = torch.flatten(splits, 0, 1)  # spl b c f t-> (spl b) c f t
         else:
-            state_dict["time_pos_embed"] = torch.nn.functional.interpolate(
-                pretrained_time_pos_embed,
-                size=(1, target_time_pos_embed_length),
-                align_corners=False,
-                mode="bilinear",
-            )
-        if target_freq_pos_embed_length <= pretrained_freq_pos_embed.shape[-2]:
-            state_dict["freq_pos_embed"] = pretrained_freq_pos_embed[:, :, :target_freq_pos_embed_length, :]
-        else:
-            state_dict["freq_pos_embed"] = torch.nn.functional.interpolate(
-                pretrained_freq_pos_embed,
-                size=(target_freq_pos_embed_length, 1),
-                align_corners=False,
-                mode="bilinear",
-            )
+            n_splits = 1
 
-    def forward_to_spec(self, x):
-        # Do not use fp16 for feature extraction, that is likely to get nan
-        with autocast(enabled=False):
-            if self.training:
-                x = self.wavtransforms(x.unsqueeze(1)).squeeze(1)
-            X = self.front_end(x)
-            X = rearrange(X, "b f t -> b 1 f t")
-            if self.init_bn is not None:
-                X = self.init_bn(X)
-        return X
-
-    def forward(self, x, mask_ratio: float = 0.75):
-        x = self.forward_to_spec(x)
-        x, mask, restore_idxs = self.forward_features(x, mask_ratio=mask_ratio)
-        return x, mask, restore_idxs
+        x = self.forward_features(x)
+        x = torch.reshape(x, (x.shape[0] // n_splits, -1, x.shape[-1]))
+        return x
 
 
 DASHENG_START_DOCSTRING = r"""
@@ -533,9 +426,8 @@ class DashengPreTrainedModel(PreTrainedModel):
     supports_gradient_checkpointing = True
 
     def _init_weights(self, module):
-        """Initialize the weights"""
         if isinstance(module, nn.Linear):
-            trunc_normal_(module.weight, std=0.02)
+            torch.nn.init.xavier_uniform_(module.weight)
             if module.bias is not None:
                 nn.init.zeros_(module.bias)
         elif isinstance(module, nn.LayerNorm):
@@ -544,29 +436,74 @@ class DashengPreTrainedModel(PreTrainedModel):
 
 
 @add_start_docstrings(
-    "The Dasheng Model outputting embedding without any specific head on top.",
+    "The Dasheng Model transformer with an optional linear layer on top of the pooled output.",
     DASHENG_START_DOCSTRING,
 )
 class DashengModel(DashengPreTrainedModel):
-    def __init__(self, config: DashengConfig) -> None:
+    def __init__(self, config: DashengConfig, outputdim: Optional[int] = None) -> None:
         super().__init__(config)
         self.config = config
         self.name = config.name
 
-        self.model = AudioTransformerMAE_Encoder(**config.encoder_kwargs)
+        self.encoder = AudioTransformerMAE_Encoder(**config.encoder_kwargs)
+
+        # Classifier head
+        if outputdim is not None:
+            self.outputlayer = nn.Sequential(
+                nn.LayerNorm(config.encoder_kwargs["embed_dim"]),
+                nn.Linear(config.encoder_kwargs["embed_dim"], outputdim),
+            )
+        else:
+            self.outputlayer = nn.Identity()
+            outputdim = config.encoder_kwargs["embed_dim"]
+        self.outputdim = outputdim
 
         # Initialize weights and apply final processing
         self.post_init()
 
-    def freeze_parameters(self):
-        for param in self.parameters():
+    def forward_head(self, x: torch.Tensor) -> torch.Tensor:
+        if self.encoder.pooling == "token":
+            x = x[:, 0]
+            return self.outputlayer(x).sigmoid()
+        elif self.encoder.pooling == "mean":
+            x = x.mean(1)
+            return self.outputlayer(x).sigmoid()
+        elif self.encoder.pooling == "logit":
+            x = x.mean(1)
+            return self.outputlayer(x)
+        else:
+            raise NotImplementedError(f"Pooling {self.encoder.pooling} not implemented.")
+
+    def freeze_encoder(self) -> None:
+        for param in self.encoder.parameters():
             param.requires_grad = False
         self._requires_grad = False
 
-    def forward(self, input_values: torch.Tensor):
-        r"""
-        Runs a forward pass of the Dasheng model as an audio encoder.
+    @add_start_docstrings_to_model_forward(DASHENG_INPUTS_DOCSTRING.format("batch_size, n_mels, sequence_length"))
+    @add_code_sample_docstrings(
+        checkpoint=_SEQ_CLASS_CHECKPOINT,
+        output_type=SequenceClassifierOutput,
+        config_class=_CONFIG_FOR_DOC,
+        modality="audio",
+        model_cls="DashengModel",
+    )
+    def forward(self, input_values: torch.Tensor, labels: Optional[torch.Tensor] = None) -> SequenceClassifierOutput:
+        """
+        Runs a forward pass of the Dasheng model with audio features. The model returns logits and hidden states. If labels are provided, the model also returns the loss.
         """
         x = torch.unsqueeze(input_values, 1)
-        x = self.model(x)
-        return SequenceClassifierOutput(logits=x)
+        last_hidden_states = self.encoder(x)
+        logits = self.forward_head(last_hidden_states)
+
+        if labels is not None:
+            try:
+                loss_fct = getattr(nn.modules.loss, self.config.loss)()
+            except AttributeError:
+                raise NotImplementedError(f"Loss {self.config.loss} not implemented.")
+
+            labels = nn.functional.one_hot(labels, num_classes=self.outputdim).float()
+            loss = loss_fct(logits, labels)
+        else:
+            loss = None
+
+        return SequenceClassifierOutput(logits=logits, loss=loss, hidden_states=last_hidden_states)

@@ -16,10 +16,6 @@
 
 
 from transformers import PretrainedConfig
-from transformers.utils import logging
-from transformers.utils.hub import cached_file
-
-logger = logging.get_logger(__name__)
 
 DASHENG_PRETRAINED_CONFIG_ARCHIVE_MAP = {
     "mispeech/dasheng-base": "https://huggingface.co/mispeech/dasheng-base/resolve/main/config.json",
@@ -60,16 +56,12 @@ class DashengConfig(PretrainedConfig):
 
     def __init__(
         self,
-        name=None,
+        name="dasheng-base",
         **kwargs,
     ):
         super().__init__(**kwargs)
 
-        encoder_kwargs = dict(
-            embed_dim=768, depth=12, num_heads=12, target_length=1012, patch_size=[64, 4], patch_stride=[64, 4]
-        )
-        encoder_kwargs.update((k, kwargs[k]) for k in set(kwargs).intersection(encoder_kwargs))
-        encoder_kwargs = {**encoder_kwargs, **kwargs}
+        encoder_kwargs = dict(target_length=1008, patch_size=[64, 4], patch_stride=[64, 4])
 
         if name == "dasheng-1.2B":
             encoder_kwargs["embed_dim"] = 1536
@@ -84,8 +76,10 @@ class DashengConfig(PretrainedConfig):
             encoder_kwargs["depth"] = 12
             encoder_kwargs["num_heads"] = 12
         else:
-            logger.info("No model name specified for DashengConfig, use default settings.")
-
+            raise ValueError(f"Unrecognized model name: {name}")
         self.name = name
-        self.encoder_kwargs = encoder_kwargs
-        self.loss = "BCE"
+
+        encoder_kwargs.update((k, kwargs[k]) for k in set(kwargs).intersection(encoder_kwargs))
+        self.encoder_kwargs = {**encoder_kwargs, **kwargs}
+
+        self.loss = "BCELoss"
