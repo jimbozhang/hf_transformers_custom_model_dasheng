@@ -1,5 +1,5 @@
 # coding=utf-8
-# Copyright 2023-2024 Xiaomi Corporation and The HuggingFace Inc. team. All rights reserved.
+# Copyright 2023-2024 Xiaomi Corporation and HuggingFace Inc. team. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -441,6 +441,13 @@ class DashengPreTrainedModel(PreTrainedModel):
 )
 class DashengModel(DashengPreTrainedModel):
     def __init__(self, config: DashengConfig, outputdim: Optional[int] = None) -> None:
+        r"""
+        Initializes the model.
+
+        Args:
+            config (DashengConfig): Configuration class for the model.
+            outputdim (int, optional): Dimension of the output layer. If None, the model returns the hidden states. Defaults to None.
+        """
         super().__init__(config)
         self.config = config
         self.name = config.name

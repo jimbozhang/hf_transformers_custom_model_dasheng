@@ -1,5 +1,5 @@
 # coding=utf-8
-# Copyright 2023-2024 Xiaomi Corporation and The HuggingFace Inc. team. All rights reserved.
+# Copyright 2023-2024 Xiaomi Corporation and HuggingFace Inc. team. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -25,40 +25,29 @@ DASHENG_PRETRAINED_CONFIG_ARCHIVE_MAP = {
 class DashengConfig(PretrainedConfig):
     model_type = "dasheng"
 
-    r"""
-    Configuration class for the Dasheng model.
-
-    Args:
-        name (str, optional, *optional*):
-            Name of the pre-defined configuration. Can be "dasheng-base", "dasheng-0.6B", or "dasheng-1.2B".
-        attn_drop_rate (float, *optional*, defaults to 0.0):
-            Dropout probability for attention weights. Default to 0.0.
-        depth (int, *optional*, defaults to 12): Number of transformer layers. Default to 12.
-        drop_path_rate (float, *optional*, defaults to 0.0): Drop path is taken from timm. Default to 0.0.
-        drop_rate (float, *optional*, defaults to 0.0):
-            Dropout probability for input embeddings. Default to 0.0.
-        embed_dim (int, *optional*, defaults to 768):
-            Dimensionality of the audio patch embeddings. Default to 768.
-        eval_avg (str, *optional*, defaults to `"mean"`):
-            Type of pooling to use for evaluation. Can be "mean", "token", "dm" or "logit". Default to "mean".
-        mlp_ratio (float, *optional*, defaults to 4.0):
-            Ratio of hidden size in the feedforward layer to the embedding size. Default to 4.0.
-        num_heads (int, *optional*, defaults to 12): Number of attention heads. Default to 12.
-        outputdim (int, *optional*, defaults to 527): Dimensionality of the output. Default to 527.
-        patch_size (int, *optional*, defaults to 16): Size of the patches. Default to 16.
-        patch_stride (int, *optional*, defaults to 16): Stride of the patches. Default to 16.
-        pooling (str, *optional*, defaults to `"mean"`):
-            Type of pooling to use for the output. Can be "mean", "token", "dm" or "logit". Default to "mean".
-        qkv_bias (bool, *optional*, defaults to `True`):
-            Whether to include bias terms in the query, key and value projections. Default to True.
-        target_length (int, *optional*, defaults to 1012): Frames of an audio chunk. Default to 1012.
-    """
-
     def __init__(
         self,
         name="dasheng-base",
         **kwargs,
     ):
+        r"""
+        Configuration class for the Dasheng model.
+
+        Args:
+            name (str, optional, *optional*):
+                Name of the pre-defined configuration. Can be "dasheng-base", "dasheng-0.6B", or "dasheng-1.2B".
+            embed_dim (int, optional, *optional*):
+                Dimension of the embedding layer. Required if `name` is not provided.
+            depth (int, optional, *optional*):
+                Number of encoder layers.
+            num_heads (int, optional, *optional*):
+                Number of attention heads.
+            loss (str, optional, *optional*):
+                Name of the loss function to use. Can be any loss in `nn.modules.loss`.
+            kwargs (dict, optional, *optional*):
+                Additional keyword arguments, see `dasheng_model.modeling_dasheng.DashengFeatureExtractor` and `dasheng_model.modeling_dasheng.AudioTransformerMAE_Encoder` for more details.
+        """
+
         super().__init__(**kwargs)
 
         encoder_kwargs = dict(target_length=1008, patch_size=[64, 4], patch_stride=[64, 4])
