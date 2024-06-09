@@ -1,5 +1,5 @@
 # coding=utf-8
-# Copyright 2023-2024 Xiaomi Corporation and The HuggingFace Inc. team.
+# Copyright 2023-2024 Xiaomi Corporation and HuggingFace Inc. team.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,7 +21,6 @@ from typing import List, Optional, Union
 import numpy as np
 import torch
 import torchaudio.transforms as audio_transforms
-from torch.cuda.amp import autocast
 from transformers.feature_extraction_sequence_utils import SequenceFeatureExtractor
 from transformers.feature_extraction_utils import BatchFeature
 from transformers.utils import logging
