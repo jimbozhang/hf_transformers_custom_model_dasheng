@@ -34,17 +34,17 @@ class DashengConfig(PretrainedConfig):
         Configuration class for the Dasheng model.
 
         Args:
-            name (str, optional, *optional*):
+            name (str):
                 Name of the pre-defined configuration. Can be "dasheng-base", "dasheng-0.6B", or "dasheng-1.2B".
-            embed_dim (int, optional, *optional*):
-                Dimension of the embedding layer. Required if `name` is not provided.
-            depth (int, optional, *optional*):
+            embed_dim (int, optional):
+                Dimension of the embedding layer.
+            depth (int, optional):
                 Number of encoder layers.
-            num_heads (int, optional, *optional*):
+            num_heads (int, optional):
                 Number of attention heads.
-            loss (str, optional, *optional*):
+            loss (str, optional):
                 Name of the loss function to use. Can be any loss in `nn.modules.loss`.
-            kwargs (dict, optional, *optional*):
+            kwargs (dict, optional):
                 Additional keyword arguments, see `dasheng_model.modeling_dasheng.DashengFeatureExtractor` and `dasheng_model.modeling_dasheng.AudioTransformerMAE_Encoder` for more details.
         """
 
