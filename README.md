@@ -1,9 +1,3 @@
----
-license: apache-2.0
-tags:
-- audio
----
-
 # Dasheng: a large scale general-purpose audio encoder
 
 [![arxiv](https://img.shields.io/badge/arXiv-2406.xxxxx-b31b1b)](https://arxiv.org/abs/2406.xxxxx)
