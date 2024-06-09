@@ -1,4 +1,4 @@
-# Dasheng: a large scale general-purpose audio encoder
+# Pretrained Dasheng on 🤗 Hugging Face
 
 [![arxiv](https://img.shields.io/badge/arXiv-2406.xxxxx-b31b1b)](https://arxiv.org/abs/2406.xxxxx)
 [![dasheng](https://img.shields.io/badge/Dasheng-base-ffcc66)](https://huggingface.co/mispeech/dasheng-base)
