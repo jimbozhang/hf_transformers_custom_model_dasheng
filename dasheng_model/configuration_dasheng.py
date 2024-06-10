@@ -38,12 +38,6 @@ class DashengConfig(PretrainedConfig):
         Args:
             name (str, *optional*):
                 Can be "dasheng-base", "dasheng-0.6B", or "dasheng-1.2B". Default to "dasheng-base".
-            embed_dim (int, *optional*):
-                Dimension of the embedding layer.
-            depth (int, *optional*):
-                Number of encoder layers.
-            num_heads (int, *optional*):
-                Number of attention heads.
             loss (str, *optional*):
                 Name of the loss function to use. Can be any loss in `nn.modules.loss`. Default to "BCELoss".
             kwargs (dict, *optional*):
