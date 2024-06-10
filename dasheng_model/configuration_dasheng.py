@@ -19,6 +19,8 @@ from transformers import PretrainedConfig
 
 DASHENG_PRETRAINED_CONFIG_ARCHIVE_MAP = {
     "mispeech/dasheng-base": "https://huggingface.co/mispeech/dasheng-base/resolve/main/config.json",
+    "mispeech/dasheng-0.6B": "https://huggingface.co/mispeech/dasheng-0.6B/resolve/main/config.json",
+    "mispeech/dasheng-1.2B": "https://huggingface.co/mispeech/dasheng-1.2B/resolve/main/config.json",
 }
 
 
@@ -36,15 +38,15 @@ class DashengConfig(PretrainedConfig):
         Args:
             name (str):
                 Name of the pre-defined configuration. Can be "dasheng-base", "dasheng-0.6B", or "dasheng-1.2B".
-            embed_dim (int, optional):
+            embed_dim (int, *optional*):
                 Dimension of the embedding layer.
-            depth (int, optional):
+            depth (int, *optional*):
                 Number of encoder layers.
-            num_heads (int, optional):
+            num_heads (int, *optional*):
                 Number of attention heads.
-            loss (str, optional):
+            loss (str, *optional*):
                 Name of the loss function to use. Can be any loss in `nn.modules.loss`.
-            kwargs (dict, optional):
+            kwargs (dict, *optional*):
                 Additional keyword arguments, see `dasheng_model.modeling_dasheng.DashengFeatureExtractor` and `dasheng_model.modeling_dasheng.AudioTransformerMAE_Encoder` for more details.
         """
 
