@@ -14,7 +14,6 @@
 # limitations under the License.
 """ Dasheng model configuration"""
 
-
 from transformers import PretrainedConfig
 
 DASHENG_PRETRAINED_CONFIG_ARCHIVE_MAP = {
@@ -29,15 +28,16 @@ class DashengConfig(PretrainedConfig):
 
     def __init__(
         self,
-        name="dasheng-base",
+        name: str = "dasheng-base",
+        loss: str = "BCELoss",
         **kwargs,
     ):
         r"""
         Configuration class for the Dasheng model.
 
         Args:
-            name (str):
-                Name of the pre-defined configuration. Can be "dasheng-base", "dasheng-0.6B", or "dasheng-1.2B".
+            name (str, *optional*):
+                Can be "dasheng-base", "dasheng-0.6B", or "dasheng-1.2B". Default to "dasheng-base".
             embed_dim (int, *optional*):
                 Dimension of the embedding layer.
             depth (int, *optional*):
@@ -45,7 +45,7 @@ class DashengConfig(PretrainedConfig):
             num_heads (int, *optional*):
                 Number of attention heads.
             loss (str, *optional*):
-                Name of the loss function to use. Can be any loss in `nn.modules.loss`.
+                Name of the loss function to use. Can be any loss in `nn.modules.loss`. Default to "BCELoss".
             kwargs (dict, *optional*):
                 Additional keyword arguments, see `dasheng_model.modeling_dasheng.DashengFeatureExtractor` and `dasheng_model.modeling_dasheng.AudioTransformerMAE_Encoder` for more details.
         """
@@ -73,4 +73,4 @@ class DashengConfig(PretrainedConfig):
         encoder_kwargs.update((k, kwargs[k]) for k in set(kwargs).intersection(encoder_kwargs))
         self.encoder_kwargs = {**encoder_kwargs, **kwargs}
 
-        self.loss = "BCELoss"
+        self.loss = loss
