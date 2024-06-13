@@ -1,6 +1,6 @@
 # Pretrained Dasheng on 🤗 Hugging Face
 
-[![arxiv](https://img.shields.io/badge/arXiv-2406.xxxxx-b31b1b)](https://arxiv.org/abs/2406.xxxxx)
+[![arxiv](https://img.shields.io/badge/arXiv-2406.06992-b31b1b)](https://arxiv.org/abs/2406.06992)
 [![dasheng](https://img.shields.io/badge/Dasheng-base-ffcc66)](https://huggingface.co/mispeech/dasheng-base)
 [![dasheng](https://img.shields.io/badge/Dasheng-0.6B-ffcc66)](https://huggingface.co/mispeech/dasheng-0.6B)
 [![dasheng](https://img.shields.io/badge/Dasheng-1.2B-ffcc66)](https://huggingface.co/mispeech/dasheng-1.2B)
