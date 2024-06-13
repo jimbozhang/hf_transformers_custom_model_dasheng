@@ -9,6 +9,9 @@
 
 Dasheng (**D**eep **A**udio-**S**ignal **H**olistic **E**mbeddi**ng**s), or “大声” ("great sound"), is a general-purpose audio encoder trained on a large-scale self-supervised learning task. Dasheng is designed to capture rich audio information across various domains, including speech, music, and environmental sounds. The model is trained on 272,356 hours of diverse audio data with 1.2 billion parameters, and exhibits significant performance gains on the [HEAR benchmark](https://hearbenchmark.com/). Dasheng outperforms previous works on CREMA-D, LibriCount, Speech Commands, VoxLingua, and competes well in music and environmental sound classification tasks.
 
+- **Model Cards:** https://huggingface.co/models?search=mispeech%2Fdasheng
+- **Original Repository:** [https://github.com/RicherMans/Dasheng](https://github.com/RicherMans/Dasheng)
+
 ![dasheng](pic/hear_eval.png)
 
 ## Usage
