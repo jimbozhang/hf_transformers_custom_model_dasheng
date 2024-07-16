@@ -12,7 +12,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Convert Dasheng checkpoints from the original repository. URL: https://git.n.xiaomi.com/sca/lemon-store"""
 
 
 import argparse
