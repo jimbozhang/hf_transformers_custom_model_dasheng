@@ -10,7 +10,7 @@
 Dasheng (**D**eep **A**udio-**S**ignal **H**olistic **E**mbeddi**ng**s), or “大声” ("great sound"), is a general-purpose audio encoder trained on a large-scale self-supervised learning task. Dasheng is designed to capture rich audio information across various domains, including speech, music, and environmental sounds. The model is trained on 272,356 hours of diverse audio data with 1.2 billion parameters, and exhibits significant performance gains on the [HEAR benchmark](https://hearbenchmark.com/). Dasheng outperforms previous works on CREMA-D, LibriCount, Speech Commands, VoxLingua, and competes well in music and environmental sound classification tasks.
 
 - **Model Cards:** https://huggingface.co/models?search=mispeech%2Fdasheng
-- **Original Repository:** [https://github.com/RicherMans/Dasheng](https://github.com/RicherMans/Dasheng)
+- **Original Repository:** [https://github.com/XiaoMi/dasheng](https://github.com/XiaoMi/dasheng)
 
 ![dasheng](pic/hear_eval.png)
 
@@ -19,7 +19,7 @@ Dasheng (**D**eep **A**udio-**S**ignal **H**olistic **E**mbeddi**ng**s), or “�
 ### Install
 
 ```bash
-pip install git+https://github.com/jimbozhang/hf_transformers_custom_model_dasheng.git
+pip install git+https://github.com/XiaoMi/hf_transformers_custom_model_dasheng.git
 ```
 
 ### Inference
@@ -56,9 +56,9 @@ torch.Size([1, 768])   # mean-pooled embedding (would be logits from a linear la
 
 ### Fine-tuning
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jimbozhang/hf_transformers_custom_model_dasheng/blob/main/example_finetune_esc50.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/XiaoMi/hf_transformers_custom_model_dasheng/blob/main/example_finetune_esc50.ipynb)
 
-[`example_finetune_esc50.ipynb`](https://github.com/jimbozhang/hf_transformers_custom_model_dasheng/blob/main/example_finetune_esc50.ipynb) demonstrates how to train a linear head on the ESC-50 dataset with the Dasheng encoder frozen.
+[`example_finetune_esc50.ipynb`](https://github.com/XiaoMi/hf_transformers_custom_model_dasheng/blob/main/example_finetune_esc50.ipynb) demonstrates how to train a linear head on the ESC-50 dataset with the Dasheng encoder frozen.
 
 ## Citation
 
