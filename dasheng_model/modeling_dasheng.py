@@ -367,7 +367,8 @@ class AudioTransformerMAE_Encoder(nn.Module):
 
     def forward(self, x):
         x = self.init_bn(x) if self.init_bn is not None else x
-
+        # Remember starting position if we pad
+        padding_start_in_chunks = 0
         if x.shape[-1] > self.target_length:
             splits = x.split(self.target_length, -1)
 
@@ -375,6 +376,7 @@ class AudioTransformerMAE_Encoder(nn.Module):
                 if self.pad_last:
                     pad = torch.zeros(*x.shape[:-1], self.target_length, device=x.device)
                     pad[..., : splits[-1].shape[-1]] = splits[-1]
+                    padding_start_in_chunks = splits[-1].shape[-1] // self.patch_stride[-1]
                     splits = torch.stack((*splits[:-1], pad), dim=0)
                 else:
                     splits = torch.stack(splits[:-1], dim=0)
@@ -387,6 +389,8 @@ class AudioTransformerMAE_Encoder(nn.Module):
 
         x = self.forward_features(x)
         x = torch.reshape(x, (x.shape[0] // n_splits, -1, x.shape[-1]))
+        if padding_start_in_chunks:
+            x = x[:,:-padding_start_in_chunks, :]
         return x
 
 
