@@ -291,7 +291,7 @@ class AudioTransformerMAE_Encoder(nn.Module):
         self.eval_avg = eval_avg
         self.time_patch_out = time_patch_out
         self.freq_patch_out = freq_patch_out
-        self.pad_last = kwargs.get("pad_last", False)
+        self.pad_last = kwargs.get("pad_last", True)
 
         if init_bn:
             self.init_bn = nn.Sequential(
