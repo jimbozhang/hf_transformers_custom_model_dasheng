@@ -19,7 +19,7 @@ Dasheng (**D**eep **A**udio-**S**ignal **H**olistic **E**mbeddi**ng**s), or â€œå
 ### Install
 
 ```bash
-pip install git+https://github.com/XiaoMi/hf_transformers_custom_model_dasheng.git
+pip install git+https://github.com/jimbozhang/hf_transformers_custom_model_dasheng.git
 ```
 
 ### Inference
@@ -56,9 +56,9 @@ torch.Size([1, 768])   # mean-pooled embedding (would be logits from a linear la
 
 ### Fine-tuning
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/XiaoMi/hf_transformers_custom_model_dasheng/blob/main/example_finetune_esc50.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jimbozhang/hf_transformers_custom_model_dasheng/blob/main/example_finetune_esc50.ipynb)
 
-[`example_finetune_esc50.ipynb`](https://github.com/XiaoMi/hf_transformers_custom_model_dasheng/blob/main/example_finetune_esc50.ipynb) demonstrates how to train a linear head on the ESC-50 dataset with the Dasheng encoder frozen.
+[`example_finetune_esc50.ipynb`](https://github.com/jimbozhang/hf_transformers_custom_model_dasheng/blob/main/example_finetune_esc50.ipynb) demonstrates how to train a linear head on the ESC-50 dataset with the Dasheng encoder frozen.
 
 ## Citation
 
