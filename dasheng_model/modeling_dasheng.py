@@ -281,7 +281,7 @@ class AudioTransformerMAE_Encoder(nn.Module):
         **kwargs,
     ):
         super().__init__()
-        assert pooling in ("mean", "token")
+        assert pooling in ("mean", "token", "logit")
         self.pooling = pooling
         self.embed_dim = embed_dim
         self.patch_stride = patch_stride

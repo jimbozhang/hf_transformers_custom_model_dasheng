@@ -81,8 +81,8 @@ class DashengFeatureExtractor(SequenceFeatureExtractor):
         self,
         x: Union[np.ndarray, torch.Tensor, List[np.ndarray], List[torch.Tensor]],
         sampling_rate: Optional[int] = None,
-        max_length: Optional[int] = 16000,
-        truncation: bool = True,
+        max_length: Optional[int] = None,
+        truncation: bool = False,
         return_tensors="pt",
     ) -> BatchFeature:
         r"""
@@ -133,7 +133,9 @@ class DashengFeatureExtractor(SequenceFeatureExtractor):
                 raise ValueError("torch.Tensor input must be a 1D or 2D.")
         elif isinstance(x, (list, tuple)):
             longest_length = max(x_.shape[0] for x_ in x)
-            if not truncation and max_length < longest_length:
+            if not truncation and max_length is not None and max_length < longest_length:
+                max_length = longest_length
+            if max_length is None:
                 max_length = longest_length
 
             if all(isinstance(x_, np.ndarray) for x_ in x):
